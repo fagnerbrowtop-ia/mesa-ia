@@ -1,0 +1,12 @@
+{
+  "name": "mesa-ia",
+  "version": "1.0.0",
+  "description": "Mesa IA Fagner — Claude, GPT e Gemini com memória compartilhada",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
