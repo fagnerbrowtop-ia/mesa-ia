@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─────────────────────────────────────────────
@@ -13,9 +13,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const MEMORY_FILE = './memoria.json';
 
 function loadMemory() {
-  if (!fs.existsSync(MEMORY_FILE)) return { projeto: '', historico: [], arquivos: [] };
+  if (!fs.existsSync(MEMORY_FILE)) return { projeto: '', historico: [] };
   try { return JSON.parse(fs.readFileSync(MEMORY_FILE, 'utf8')); }
-  catch (e) { return { projeto: '', historico: [], arquivos: []};}
+  catch (e) { return { projeto: '', historico: [] }; }
 }
 
 function saveMemory(mem) {
@@ -212,3 +212,6 @@ app.post('/api/mensagem', async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Mesa IA rodando na porta ${PORT}`));
