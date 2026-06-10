@@ -132,7 +132,7 @@ async function callGPT(prompt, contexto, file) {
           : prompt
         },
       ],
-      max_tokens: 8192,
+      max_tokens: 31256,
     }),
   });
 
@@ -160,7 +160,7 @@ async function callGemini(prompt, contexto, file) {
               ]
             : [{ text: prompt }]
         }],
-        generationConfig: { maxOutputTokens: 8192 },
+        generationConfig: { maxOutputTokens: 31245 },
         tools: [{ googleSearch: {} }] // ADICIONADO: Motor de busca ativado
       }),
     }
