@@ -1,85 +1,45 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
     <title>Mesa IA</title>
     <style>
-        body { background: #0c0c0e; color: #e8e8e8; font-family: sans-serif; margin: 0; padding: 0; }
-        #chatArea { height: 80vh; overflow-y: auto; padding: 20px; }
-        .msg-bubble { background: #1a1a24; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: inline-block; max-width: 80%; }
-        .input-area { position: fixed; bottom: 0; width: 100%; padding: 20px; background: #13131a; }
-        #msgInput { width: 80%; padding: 10px; }
+        /* Insira aqui o seu CSS original */
     </style>
 </head>
 <body>
+    <script>
+        // --- SUAS FUNÇÕES ORIGINAIS ---
+        // (Certifique-se de que a sua função handleFiles continua aqui)
+        
+        // --- FUNÇÃO DE COLAGEM CORRIGIDA E SEGURA ---
+        document.getElementById('msgInput').addEventListener('paste', function(e) {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const file = items[i].getAsFile();
+                    if (file) {
+                        e.preventDefault(); // Impede erro de renderização
+                        handleFiles([file]); // Chama sua função que já funciona
+                        console.log("Imagem colada com sucesso");
+                    }
+                }
+            }
+        });
 
-<div id="chatArea"></div>
-
-<div class="input-area">
-    <textarea id="msgInput" placeholder="Mensagem..."></textarea>
-    <button onclick="sendMessage()">Enviar</button>
-</div>
-
-<script>
-    let currentAgent = 'claude';
-    let pendingFile = null;
-
-    // Função de envio corrigida
-    async function sendMessage() {
-        const input = document.getElementById('msgInput');
-        const text = input.value.trim();
-        if (!text && !pendingFile) return;
-
-        const chatArea = document.getElementById('chatArea');
-        chatArea.innerHTML += `<div class="msg-bubble">Você: ${text}</div>`;
-
-        try {
-            const response = await fetch('/api/mensagem', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    texto: `@${currentAgent} ${text}`,
-                    file: pendingFile // Envia o objeto de arquivo corretamente
-                })
-            });
-
-            const data = await response.json();
+        // --- SUA FUNÇÃO DE ENVIO (Mantenha o formato original que o servidor aceita) ---
+        async function sendMessage() {
+            const input = document.getElementById('msgInput');
+            const texto = input.value.trim();
             
-            // Verifica se a resposta é válida
-            if (data && data.resposta) {
-                chatArea.innerHTML += `<div class="msg-bubble">${data.agente || 'IA'}: ${data.resposta}</div>`;
-            } else {
-                chatArea.innerHTML += `<div class="msg-bubble" style="color:red;">Erro: Resposta vazia da IA.</div>`;
-            }
-        } catch (e) {
-            chatArea.innerHTML += `<div class="msg-bubble" style="color:red;">Erro de conexão.</div>`;
-        }
+            // Se o seu servidor espera 'texto' e 'file', mantenha esse formato:
+            const payload = {
+                texto: `@${currentAgent} ${texto}`,
+                file: pendingFiles.length > 0 ? pendingFiles[0] : null
+            };
 
-        input.value = '';
-        pendingFile = null;
-        chatArea.scrollTop = chatArea.scrollHeight;
-    }
-
-    // Função de colagem segura
-    document.getElementById('msgInput').addEventListener('paste', (e) => {
-        const items = e.clipboardData.items;
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-                const file = items[i].getAsFile();
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    pendingFile = {
-                        name: `print_${Date.now()}.png`,
-                        base64: event.target.result.split(',')[1]
-                    };
-                    alert('Imagem anexada com sucesso!');
-                };
-                reader.readAsDataURL(file);
-                return;
-            }
+            // ... restante da sua função original de fetch ...
         }
-    });
-</script>
+    </script>
 </body>
 </html>
