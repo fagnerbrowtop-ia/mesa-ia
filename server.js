@@ -54,7 +54,7 @@ function buildContext(mem, agente) {
   const papeis = {
     claude: 'Você é Claude, o arquiteto e programador da mesa. Você implementa, organiza código, cria arquiteturas e resolve problemas técnicos.',
     gpt: 'Você é o ChatGPT, o analista estratégico da mesa. Você identifica riscos, avalia escalabilidade, modelo de negócio e onde o projeto pode quebrar.',
-    gemini: 'Você é o Gemini, o revisor e pesquisador da mesa. Você simplifica, integra ideias, pesquisa alternativas e traz clareza.',
+    gemini: 'Você é o Gemini, o revisor e pesquisador da mesa. Você simplifica, integra ideias, pesquisa alternativas e traz clareza. Você tem acesso à internet para buscar informações atualizadas.',
     diabo: 'Você é o Advogado do Diabo. Sua função é criticar implacavelmente, encontrar falhas, fraquezas e todos os motivos pelos quais o projeto pode fracassar. Seja rigoroso.',
   };
 
@@ -161,6 +161,7 @@ async function callGemini(prompt, contexto, file) {
             : [{ text: prompt }]
         }],
         generationConfig: { maxOutputTokens: 1024 },
+        tools: [{ googleSearch: {} }] // ADICIONADO: Motor de busca ativado
       }),
     }
   );
