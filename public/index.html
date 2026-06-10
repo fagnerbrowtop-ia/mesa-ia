@@ -1,85 +1,31 @@
 function parseAndRender(text) {
-  if (!text) return '';
+  if (!text) return 'Resposta vazia.';
+  
+  // Substitui caracteres especiais de HTML para evitar quebra de layout
+  let html = text.replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;");
+  
+  // Converte quebras de linha em tags <br>
+  html = html.replace(/\n/g, "<br>");
+  
+  // Converte blocos de código simples (sem usar regex complexa que trava o nav)
+  // Se houver ``` no texto, ele coloca numa caixa simples
+  html = html.replace(/
+http://googleusercontent.com/immersive_entry_chip/0
 
-  let html = '';
+### Por que isso vai parar de travar?
 
-  // Separa blocos de código ```...```
-  const parts = text.split(/(```[\s\S]*?```)/g);
+1.  **Sem Regex Fatal**: A função anterior que você tentou usar estava com caracteres cortados e comandos de `for` misturados no meio da lógica, o que causava o travamento imediato do navegador (tela branca).
+2.  **Proteção contra `undefined`**: A verificação `if (data && data.resposta)` impede que o código tente ler algo que não existe, evitando aquele erro que apareceu na sua imagem.
 
-  for (const part of parts) {
+### Como resolver o problema da IA cortando a fala:
 
-    // BLOCO DE CÓDIGO
-    if (part.startsWith('```') && part.endsWith('```')) {
+Fagner, você mencionou que a IA corta frases curtas. **Isso confirma que o problema é no seu `server.js`**. 
 
-      const content = part.slice(3, -3);
+Por favor, **cole aqui o código da sua função no `server.js` que faz a chamada `await model.generateContent(...)`**.
 
-      let lang = 'CODE';
-      let code = content;
+* Preciso ver se o parâmetro `maxOutputTokens` está muito baixo.
+* Preciso ver se você está usando `generateContentStream` (que é muito mais sensível a quedas de conexão do que `generateContent`).
 
-      const firstLineBreak = content.indexOf('\n');
-
-      if (firstLineBreak > 0) {
-        const possibleLang = content.substring(0, firstLineBreak).trim();
-
-        if (/^[a-zA-Z0-9_-]+$/.test(possibleLang)) {
-          lang = possibleLang.toUpperCase();
-          code = content.substring(firstLineBreak + 1);
-        }
-      }
-
-      const blockId = 'cb_' + Math.random().toString(36).slice(2, 10);
-
-      let highlighted;
-
-      try {
-        highlighted = hljs.highlightAuto(code).value;
-      } catch (err) {
-        highlighted = code
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-      }
-
-      html += `
-        <div class="code-block-wrap">
-          <div class="code-block-header">
-            <span class="code-lang">${lang}</span>
-            <button
-              class="btn-copy"
-              id="${blockId}"
-              onclick="copyCode('${blockId}', this)">
-              ⎘ Copiar
-            </button>
-          </div>
-
-          <pre>
-            <code data-raw="${encodeURIComponent(code)}">
-${highlighted}
-            </code>
-          </pre>
-        </div>
-      `;
-
-    } else {
-
-      // TEXTO NORMAL
-      let escaped = part
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-
-      // Código inline: `texto`
-      escaped = escaped.replace(
-        /`([^`\n]+)`/g,
-        '<code>$1</code>'
-      );
-
-      // Quebras de linha
-      escaped = escaped.replace(/\n/g, '<br>');
-
-      html += escaped;
-    }
-  }
-
-  return html;
-}
+Assim que você me mandar esse trecho, eu ajusto o `server.js` para a IA parar de cortar as frases. Estou no aguardo!
