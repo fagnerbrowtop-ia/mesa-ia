@@ -350,13 +350,13 @@ async function selecionarProjeto(id, ativar) {
 
   // Renderizar histórico
   const chat = document.getElementById('chatArea');
-  chat.innerHTML = '';
+  // Limpar só as mensagens, não o emptyState
+  Array.from(chat.children).forEach(c => { if (c.id !== 'emptyState') c.remove(); });
   const es = document.getElementById('emptyState');
   if (!p.historico.length) {
-    es.style.display = 'flex';
-    chat.appendChild(es);
+    if (es) es.style.display = 'flex';
   } else {
-    es.style.display = 'none';
+    if (es) es.style.display = 'none';
     p.historico.forEach(m => {
       addUserBubble(m.pergunta);
       addAgentBubble(m.agente, m.resposta, m.timestamp);
@@ -485,7 +485,7 @@ async function sendMessage() {
   input.style.height = 'auto';
 
   const es = document.getElementById('emptyState');
-  es.style.display = 'none';
+  if (es) es.style.display = 'none';
 
   addUserBubble(texto || '(imagem)', imgSnapshot?.previewUrl);
   const typing = addTyping(currentAgent);
