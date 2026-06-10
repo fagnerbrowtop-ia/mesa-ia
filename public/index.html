@@ -348,7 +348,8 @@ async function sendMessage() {
 // RENDER — with code block parsing
 function parseAndRender(text) {
   // Replace ```lang\ncode``` with styled code blocks
-  const parts = text.split(/(```[\s\S]*?```)/g);
+  const parts = text.split(/(```[\s\S]*?
+```)/g);
   return parts.map(part => {
     if (part.startsWith('```')) {
       const lines = part.slice(3, -3).split('\n');
@@ -465,6 +466,23 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeModal();
 });
 document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))closeModal();});
+
+// --- NOVA FUNÇÃO PARA COLAR (CTRL+V) IMAGENS DIRETO NO CHAT ---
+document.getElementById('msgInput').addEventListener('paste', function(e) {
+  const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+  const filesToProcess = [];
+  
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      const file = items[i].getAsFile();
+      if (file) filesToProcess.push(file);
+    }
+  }
+  
+  if (filesToProcess.length > 0) {
+    handleFiles(filesToProcess);
+  }
+});
 </script>
 </body>
 </html>
