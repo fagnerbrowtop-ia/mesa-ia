@@ -1,44 +1,85 @@
 function parseAndRender(text) {
   if (!text) return '';
-  
+
   let html = '';
-  // Expressão regular corrigida para capturar blocos de código
-  const parts = text.split(/(```[\s\S]*?```)/);
-  
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    
+
+  // Separa blocos de código ```...```
+  const parts = text.split(/(```[\s\S]*?```)/g);
+
+  for (const part of parts) {
+
+    // BLOCO DE CÓDIGO
     if (part.startsWith('```') && part.endsWith('```')) {
+
       const content = part.slice(3, -3);
-      const firstLineIndex = content.indexOf('\n');
-      let lang = 'code';
+
+      let lang = 'CODE';
       let code = content;
-      
-      if (firstLineIndex > 0) {
-        const possibleLang = content.substring(0, firstLineIndex).trim();
-        if (/^[a-zA-Z]+$/.test(possibleLang)) {
-          lang = possibleLang;
-          code = content.substring(firstLineIndex + 1);
+
+      const firstLineBreak = content.indexOf('\n');
+
+      if (firstLineBreak > 0) {
+        const possibleLang = content.substring(0, firstLineBreak).trim();
+
+        if (/^[a-zA-Z0-9_-]+$/.test(possibleLang)) {
+          lang = possibleLang.toUpperCase();
+          code = content.substring(firstLineBreak + 1);
         }
       }
-      
-      const id = 'cb_' + Math.random().toString(36).slice(2, 10);
-      const highlighted = hljs.highlightAuto(code).value;
-      
-      html += '<div class="code-block-wrap">';
-      html += '<div class="code-block-header">';
-      html += '<span class="code-lang">' + lang.toUpperCase() + '</span>';
-      html += '<button class="btn-copy" id="' + id + '" onclick="copyCode(\'' + id + '\', this)">⎘ Copiar</button>';
-      html += '</div>';
-      html += '<pre><code data-raw="' + encodeURIComponent(code) + '">' + highlighted + '</code></pre>';
-      html += '</div>';
+
+      const blockId = 'cb_' + Math.random().toString(36).slice(2, 10);
+
+      let highlighted;
+
+      try {
+        highlighted = hljs.highlightAuto(code).value;
+      } catch (err) {
+        highlighted = code
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+
+      html += `
+        <div class="code-block-wrap">
+          <div class="code-block-header">
+            <span class="code-lang">${lang}</span>
+            <button
+              class="btn-copy"
+              id="${blockId}"
+              onclick="copyCode('${blockId}', this)">
+              ⎘ Copiar
+            </button>
+          </div>
+
+          <pre>
+            <code data-raw="${encodeURIComponent(code)}">
+${highlighted}
+            </code>
+          </pre>
+        </div>
+      `;
+
     } else {
-      const escaped = part.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const withInlineCode = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
-      const withBreaks = withInlineCode.replace(/\n/g, '<br>');
-      html += withBreaks;
+
+      // TEXTO NORMAL
+      let escaped = part
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Código inline: `texto`
+      escaped = escaped.replace(
+        /`([^`\n]+)`/g,
+        '<code>$1</code>'
+      );
+
+      // Quebras de linha
+      escaped = escaped.replace(/\n/g, '<br>');
+
+      html += escaped;
     }
   }
-  
+
   return html;
 }
