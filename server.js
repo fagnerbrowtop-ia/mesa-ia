@@ -146,7 +146,7 @@ async function callGemini(prompt, contexto, file) {
   if (!apiKey) throw new Error('GEMINI_API_KEY não configurada');
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -174,12 +174,10 @@ async function callGemini(prompt, contexto, file) {
 // ROTAS
 // ─────────────────────────────────────────────
 
-// Buscar histórico e projeto
 app.get('/api/memoria', (req, res) => {
   res.json(loadMemory());
 });
 
-// Atualizar contexto do projeto
 app.post('/api/projeto', (req, res) => {
   const mem = loadMemory();
   mem.projeto = req.body.projeto || '';
@@ -187,7 +185,6 @@ app.post('/api/projeto', (req, res) => {
   res.json({ ok: true });
 });
 
-// Limpar histórico
 app.post('/api/limpar', (req, res) => {
   const mem = loadMemory();
   mem.historico = [];
@@ -195,7 +192,6 @@ app.post('/api/limpar', (req, res) => {
   res.json({ ok: true });
 });
 
-// Enviar mensagem
 app.post('/api/mensagem', async (req, res) => {
   const { texto, file } = req.body;
   if (!texto?.trim() && !file) return res.status(400).json({ erro: 'Mensagem vazia' });
@@ -215,7 +211,6 @@ app.post('/api/mensagem', async (req, res) => {
       resposta = await callGemini(pergunta, contexto, file);
     }
 
-    // Salvar na memória
     mem.historico.push({
       agente,
       pergunta,
@@ -223,7 +218,6 @@ app.post('/api/mensagem', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
 
-    // Manter só os últimos 100 registros
     if (mem.historico.length > 100) mem.historico = mem.historico.slice(-100);
     saveMemory(mem);
 
@@ -233,6 +227,5 @@ app.post('/api/mensagem', async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Mesa IA rodando na porta ${PORT}`));
