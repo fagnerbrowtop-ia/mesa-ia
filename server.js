@@ -91,7 +91,7 @@ async function callClaude(prompt, contexto, file) {
     },
     body: JSON.stringify({
       model: 'claude-opus-4-5',
-      max_tokens: 1024,
+      max_tokens: 8192,
       system: contexto,
       messages: [{
         role: 'user',
@@ -132,7 +132,7 @@ async function callGPT(prompt, contexto, file) {
           : prompt
         },
       ],
-      max_tokens: 1024,
+      max_tokens: 8192,
     }),
   });
 
@@ -160,7 +160,7 @@ async function callGemini(prompt, contexto, file) {
               ]
             : [{ text: prompt }]
         }],
-        generationConfig: { maxOutputTokens: 1024 },
+        generationConfig: { maxOutputTokens: 8192 },
         tools: [{ googleSearch: {} }] // ADICIONADO: Motor de busca ativado
       }),
     }
