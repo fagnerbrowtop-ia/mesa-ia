@@ -1,57 +1,85 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Mesa IA - Correção de Upload</title>
-    <!-- Mantenha seus estilos aqui -->
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Mesa IA</title>
+    <style>
+        body { background: #0c0c0e; color: #e8e8e8; font-family: sans-serif; margin: 0; padding: 0; }
+        #chatArea { height: 80vh; overflow-y: auto; padding: 20px; }
+        .msg-bubble { background: #1a1a24; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: inline-block; max-width: 80%; }
+        .input-area { position: fixed; bottom: 0; width: 100%; padding: 20px; background: #13131a; }
+        #msgInput { width: 80%; padding: 10px; }
+    </style>
 </head>
 <body>
-    <!-- (Estrutura do seu HTML permanece a mesma) -->
-    
-    <script>
-        // Função corrigida para lidar com arquivos e garantir que a API receba os dados
-        async function sendMessage() {
-            const input = document.getElementById('msgInput');
-            const texto = input.value.trim();
+
+<div id="chatArea"></div>
+
+<div class="input-area">
+    <textarea id="msgInput" placeholder="Mensagem..."></textarea>
+    <button onclick="sendMessage()">Enviar</button>
+</div>
+
+<script>
+    let currentAgent = 'claude';
+    let pendingFile = null;
+
+    // Função de envio corrigida
+    async function sendMessage() {
+        const input = document.getElementById('msgInput');
+        const text = input.value.trim();
+        if (!text && !pendingFile) return;
+
+        const chatArea = document.getElementById('chatArea');
+        chatArea.innerHTML += `<div class="msg-bubble">Você: ${text}</div>`;
+
+        try {
+            const response = await fetch('/api/mensagem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    texto: `@${currentAgent} ${text}`,
+                    file: pendingFile // Envia o objeto de arquivo corretamente
+                })
+            });
+
+            const data = await response.json();
             
-            // Verifica se tem algo para enviar (texto ou arquivo)
-            if (!texto && pendingFiles.length === 0) return;
+            // Verifica se a resposta é válida
+            if (data && data.resposta) {
+                chatArea.innerHTML += `<div class="msg-bubble">${data.agente || 'IA'}: ${data.resposta}</div>`;
+            } else {
+                chatArea.innerHTML += `<div class="msg-bubble" style="color:red;">Erro: Resposta vazia da IA.</div>`;
+            }
+        } catch (e) {
+            chatArea.innerHTML += `<div class="msg-bubble" style="color:red;">Erro de conexão.</div>`;
+        }
 
-            // Prepara o objeto de arquivo para envio, se existir
-            const fileData = pendingFiles.length > 0 ? {
-                name: pendingFiles[0].name,
-                base64: pendingFiles[0].base64 // Certifique-se que o backend espera base64
-            } : null;
+        input.value = '';
+        pendingFile = null;
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
 
-            // Adiciona a bolha do usuário visualmente
-            addUserBubble(texto, pendingFiles[0]?.previewUrl);
-            
-            input.value = '';
-            pendingFiles = [];
-            renderPreviews();
-
-            try {
-                const res = await fetch('/api/mensagem', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        texto: `@${currentAgent} ${texto}`, 
-                        file: fileData // Isso resolve o "undefined" no backend
-                    })
-                });
-                
-                const data = await res.json();
-                // Verifica se a resposta contém os campos esperados para evitar o erro "undefined"
-                if (data && data.agente && data.resposta) {
-                    addAgentBubble(data.agente, data.resposta);
-                } else {
-                    console.error("Erro na resposta da API:", data);
-                    addAgentBubble('Sistema', 'Erro: Resposta do agente inválida.');
-                }
-            } catch (err) {
-                console.error("Falha ao enviar mensagem:", err);
+    // Função de colagem segura
+    document.getElementById('msgInput').addEventListener('paste', (e) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const file = items[i].getAsFile();
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    pendingFile = {
+                        name: `print_${Date.now()}.png`,
+                        base64: event.target.result.split(',')[1]
+                    };
+                    alert('Imagem anexada com sucesso!');
+                };
+                reader.readAsDataURL(file);
+                return;
             }
         }
-    </script>
+    });
+</script>
 </body>
 </html>
