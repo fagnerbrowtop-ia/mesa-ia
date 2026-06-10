@@ -3,43 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <title>Mesa IA</title>
-    <style>
-        /* Insira aqui o seu CSS original */
-    </style>
-</head>
+    </head>
 <body>
     <script>
-        // --- SUAS FUNÇÕES ORIGINAIS ---
-        // (Certifique-se de que a sua função handleFiles continua aqui)
-        
-        // --- FUNÇÃO DE COLAGEM CORRIGIDA E SEGURA ---
+        // Mantenha suas funções originais aqui
+
+        // Bloco de segurança para a colagem de imagens
         document.getElementById('msgInput').addEventListener('paste', function(e) {
-            const items = e.clipboardData.items;
-            for (let i = 0; i < items.length; i++) {
-                if (items[i].type.indexOf('image') !== -1) {
-                    const file = items[i].getAsFile();
-                    if (file) {
-                        e.preventDefault(); // Impede erro de renderização
-                        handleFiles([file]); // Chama sua função que já funciona
-                        console.log("Imagem colada com sucesso");
+            try {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const file = items[i].getAsFile();
+                        if (file) {
+                            e.preventDefault();
+                            handleFiles([file]);
+                        }
                     }
                 }
+            } catch (err) {
+                console.error("Erro ao processar colagem:", err);
             }
         });
-
-        // --- SUA FUNÇÃO DE ENVIO (Mantenha o formato original que o servidor aceita) ---
-        async function sendMessage() {
-            const input = document.getElementById('msgInput');
-            const texto = input.value.trim();
-            
-            // Se o seu servidor espera 'texto' e 'file', mantenha esse formato:
-            const payload = {
-                texto: `@${currentAgent} ${texto}`,
-                file: pendingFiles.length > 0 ? pendingFiles[0] : null
-            };
-
-            // ... restante da sua função original de fetch ...
-        }
     </script>
 </body>
 </html>
