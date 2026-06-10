@@ -78,7 +78,7 @@ Responda de forma direta e útil. Quando relevante, referencia o que outros memb
 // CHAMADAS PARA CADA API
 // ─────────────────────────────────────────────
 
-async function callClaude(prompt, contexto) {
+async function callClaude(prompt, contexto, file) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY não configurada');
 
@@ -93,7 +93,15 @@ async function callClaude(prompt, contexto) {
       model: 'claude-opus-4-5',
       max_tokens: 1024,
       system: contexto,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{
+        role: 'user',
+        content: file && file.type && file.type.startsWith('image/')
+          ? [
+              { type: 'image', source: { type: 'base64', media_type: file.type, data: file.base64 } },
+              { type: 'text', text: prompt || 'Analise esta imagem.' }
+            ]
+          : prompt
+      }],
     }),
   });
 
@@ -102,7 +110,7 @@ async function callClaude(prompt, contexto) {
   return data.content[0].text;
 }
 
-async function callGPT(prompt, contexto) {
+async function callGPT(prompt, contexto, file) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OPENAI_API_KEY não configurada');
 
@@ -116,7 +124,13 @@ async function callGPT(prompt, contexto) {
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: contexto },
-        { role: 'user', content: prompt },
+        { role: 'user', content: file && file.type && file.type.startsWith('image/')
+          ? [
+              { type: 'text', text: prompt || 'Analise esta imagem.' },
+              { type: 'image_url', image_url: { url: `data:${file.type};base64,${file.base64}` } }
+            ]
+          : prompt
+        },
       ],
       max_tokens: 1024,
     }),
@@ -127,7 +141,7 @@ async function callGPT(prompt, contexto) {
   return data.choices[0].message.content;
 }
 
-async function callGemini(prompt, contexto) {
+async function callGemini(prompt, contexto, file) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY não configurada');
 
@@ -138,7 +152,14 @@ async function callGemini(prompt, contexto) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         system_instruction: { parts: [{ text: contexto }] },
-        contents: [{ parts: [{ text: prompt }] }],
+        contents: [{
+          parts: file && file.type && file.type.startsWith('image/')
+            ? [
+                { inline_data: { mime_type: file.type, data: file.base64 } },
+                { text: prompt || 'Analise esta imagem.' }
+              ]
+            : [{ text: prompt }]
+        }],
         generationConfig: { maxOutputTokens: 1024 },
       }),
     }
@@ -176,22 +197,22 @@ app.post('/api/limpar', (req, res) => {
 
 // Enviar mensagem
 app.post('/api/mensagem', async (req, res) => {
-  const { texto } = req.body;
-  if (!texto?.trim()) return res.status(400).json({ erro: 'Mensagem vazia' });
+  const { texto, file } = req.body;
+  if (!texto?.trim() && !file) return res.status(400).json({ erro: 'Mensagem vazia' });
 
-  const agente = detectAgent(texto);
-  const pergunta = cleanMention(texto);
+  const agente = detectAgent(texto || '');
+  const pergunta = cleanMention(texto || '');
   const mem = loadMemory();
   const contexto = buildContext(mem, agente);
 
   try {
     let resposta;
     if (agente === 'claude' || agente === 'diabo') {
-      resposta = await callClaude(pergunta, contexto);
+      resposta = await callClaude(pergunta, contexto, file);
     } else if (agente === 'gpt') {
-      resposta = await callGPT(pergunta, contexto);
+      resposta = await callGPT(pergunta, contexto, file);
     } else if (agente === 'gemini') {
-      resposta = await callGemini(pergunta, contexto);
+      resposta = await callGemini(pergunta, contexto, file);
     }
 
     // Salvar na memória
